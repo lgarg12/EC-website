@@ -1,4 +1,5 @@
 # Ignore node_modules directory
-node_modules/
+/node_modules
+
 
 # Add other entries as needed (e.g., logs, build outputs, etc.)
