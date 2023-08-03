@@ -31,6 +31,11 @@ router.put("/:id", async(req,res)=>{
 router.delete("/:id", async(req,res)=>{
     try{
         const post = await Post.findById(req.params.id);
+
+        if(!post){
+            return res.status(404).json({message:"Post not found"})
+        }
+
         if(post.userId === req.body.userId){
             await post.deleteOne();
             res.status(200).json("The post has been updated");
@@ -59,27 +64,37 @@ router.put("/:id/like",async(req,res)=>{
     }
 });
 // get a post
-router.get("/:id",async(req,res)=>{
-    try{
-        const post = Post.findById(req.params.id);
+router.get("/:id", async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
         res.status(200).json(post);
-    }catch(error){
-        res.status(404).json(error);
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
 });
+
 // get all post
-router.get("/timelines",async(req,res)=>{
-    let postArray = [];
-    try{
+router.get("/timelines", async (req, res) => {
+    try {
         const currentUser = await User.findById(req.body.userId);
-        const userPosts = await Post.find({userId:currentUser._id});
-        const friendPosts = await Promise.all(
-            currentUser.followings.map(friendId=>{
-                Post.find({userId:friendId});
-            })
-        );
-        res.status(200).json(userPosts.concat(...friendPosts));
-    }catch(error){
+        const userPosts = await Post.find({ userId: req.body.userId });
+
+        const friendPostsPromises = currentUser.followings.map(async (friendId) => {
+            const friendPosts = await Post.find({ userId: friendId });
+            return friendPosts;
+        });
+
+        const friendPosts = await Promise.all(friendPostsPromises);
+        const combinedPosts = userPosts.concat(...friendPosts);
+
+        // Concatenate userPosts and friendPosts arrays using the spread operator
+        res.status(200).json(combinedPosts);
+    } catch (error) {
         res.status(500).json(error);
     }
 });

@@ -2,6 +2,7 @@ const User = require("../Models/User");
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
 
+// userId is myself
 // Update Operation
 router.put("/:id", async (req, res) => {
     try {
@@ -62,7 +63,7 @@ router.get("/:id",async(req,res)=>{
     }
 });
 // Follow operation
-router.put("/:id", async (req, res) => {
+router.put("/:id/Follow", async (req, res) => {
     try {
         // Check if the user making the request and the requested user are different
         if (req.body.userId !== req.params.id) {
