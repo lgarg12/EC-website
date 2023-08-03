@@ -1,5 +1,6 @@
 const router = require("express").Router();
-const Post = require("../Models/Post")
+const Post = require("../Models/Post");
+const User = require("../Models/User");
 
 // Create a post
 router.post("/",async(req,res)=>{
@@ -63,40 +64,60 @@ router.put("/:id/like",async(req,res)=>{
         res.status(500).json(error);
     }
 });
-// get a post
-router.get("/:id", async (req, res) => {
-    try {
-        const post = await Post.findById(req.params.id);
+// // get a post
+// router.get("/:id", async (req, res) => {
+//     try {
+//         const post = await Post.findById(req.params.id);
 
-        if (!post) {
-            return res.status(404).json({ message: "Post not found" });
-        }
+//         if (!post) {
+//             return res.status(404).json({ message: "Post not found" });
+//         }
 
-        res.status(200).json(post);
-    } catch (error) {
-        res.status(500).json({ message: "Internal server error", error: error.message });
-    }
-});
+//         res.status(200).json(post);
+//     } catch (error) {
+//         res.status(500).json({ message: "Internal server error", error: error.message });
+//     }
+// });
 
 // get all post
 router.get("/timelines", async (req, res) => {
     try {
         const currentUser = await User.findById(req.body.userId);
-        const userPosts = await Post.find({ userId: req.body.userId });
-
+        if(!currentUser){
+            return res.status(404).json({message:"User of this id is not registered"})
+        }
+        const userPosts = await Post.find({ userId: currentUser._id });
+        console.log("Chl ja ")
         const friendPostsPromises = currentUser.followings.map(async (friendId) => {
             const friendPosts = await Post.find({ userId: friendId });
             return friendPosts;
         });
-
-        const friendPosts = await Promise.all(friendPostsPromises);
-        const combinedPosts = userPosts.concat(...friendPosts);
+        
+        // const friendPosts = await Promise.all(friendPostsPromises);
+        // const combinedPosts = userPosts.concat(...friendPosts);
+        // console.log(combinedPosts);
 
         // Concatenate userPosts and friendPosts arrays using the spread operator
-        res.status(200).json(combinedPosts);
+        res.status(200).json(userPosts);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({message:"Error server side",error});
     }
+    // const currentUser = await User.findById(req.body.userId);
+    // if(!currentUser){
+    //     return res.status(404).json({message:"User of this id is not registered"})
+    // }
+    // const userPosts = await Post.find({ userId: currentUser._id });
+    // console.log("Chl ja ")
+    // const friendPostsPromises = currentUser.followings.map(async (friendId) => {
+    //     const friendPosts = await Post.find({ userId: friendId });
+    //     return friendPosts;
+    // });
+    
+    // // const friendPosts = await Promise.all(friendPostsPromises);
+    // // const combinedPosts = userPosts.concat(...friendPosts);
+    // // console.log(combinedPosts);
+    // // Concatenate userPosts and friendPosts arrays using the spread operator
+    // res.status(200).json(userPosts);
 });
 
 
